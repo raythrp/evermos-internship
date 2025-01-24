@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/raythrp/evermos-internship/controllers"
+	"github.com/raythrp/evermos-internship/middlewares"
 )
 
 func RouterApp(c *fiber.App) {
@@ -15,4 +16,8 @@ func RouterApp(c *fiber.App) {
 	// For Auth
 	c.Post("/auth/login", controllers.AuthLogin)
 	c.Post("/auth/register", controllers.AuthRegister)
+
+	// For User
+	c.Get("/user", middlewares.AuthRequired(), controllers.UserGetMyProfile)
+	c.Put("/user", middlewares.AuthRequired(), controllers.UserUpdateMyProfile)
 }

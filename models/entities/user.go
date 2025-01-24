@@ -17,7 +17,7 @@ type User struct {
 	IsAdmin      bool      `gorm:"column:isAdmin" json:"isAdmin"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	CreatedAt    time.Time `json:"created_at"`
-	Toko         Toko      `gorm:"foreignKey:IDUser" json:"toko"`
+	Toko         Toko      `gorm:"foreignKey:IDUser;references:ID" json:"toko"`
 	Alamat       []Alamat  `gorm:"foreignKey:IDUser" json:"alamat"`
 	Trx          []Trx     `gorm:"foreignKey:IDUser" json:"trx"`
 }

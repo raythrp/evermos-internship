@@ -28,10 +28,12 @@ func AuthLogin(c *fiber.Ctx) error {
 	// Correct Credentials
 	var user models.User
 	if err := database.DB.Where("notelp = ? AND kata_sandi = ?", body.NoTelp, body.KataSandi).First(&user).Error; err == nil {
-		token := jwt.New((jwt.SigningMethodHS256))
-		claims := token.Claims.(jwt.MapClaims)
-		claims["sub"] = user.NoTelp
-		claims["exp"] = time.Now().Add(time.Hour * 24 * 7) // A week
+
+		// Token generation
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"sub": user.NoTelp,                        
+			"exp": time.Now().Add(time.Hour * 24 * 7).Unix(), // a week
+		  })		  
 
 		s, err := token.SignedString([]byte(jwtSecret))
 		if err != nil {
