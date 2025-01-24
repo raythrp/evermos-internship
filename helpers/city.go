@@ -7,19 +7,19 @@ import (
 	models "github.com/raythrp/evermos-internship/models/entities"
 )
 
-func GetCityDetail(id string) models.City {
+func GetCityDetail(id string) (models.City, error) {
 	var city models.City
 	url := "https://emsifa.github.io/api-wilayah-indonesia/api/regency/" + id + ".json"
 	provinceResp, err := http.Get(url)
 	if err != nil {
-		return city
+		return city, err
 	}
 	defer provinceResp.Body.Close()
 
 	// Parse the response body to JSON
 	err = json.NewDecoder(provinceResp.Body).Decode(&city)
 	if err != nil {
-		return city
+		return city, err
 	}
-	return city
+	return city, nil
 }

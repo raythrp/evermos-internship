@@ -14,4 +14,5 @@ func RouterApp(c *fiber.App) {
 
 	// For Auth
 	c.Post("/auth/login", controllers.AuthLogin)
+	c.Post("/auth/register", controllers.AuthRegister)
 }

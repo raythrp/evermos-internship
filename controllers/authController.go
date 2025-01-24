@@ -12,12 +12,12 @@ import (
 
 const jwtSecret = "WsItpI3Moq4I0rVwo2fOcbvw8CDgJT9FMrsz9zsqAy3e7PRU8sojZ79jSDtnOuO0bjceupoidsajp3u2019eu[20ihceoijlciuab]"
 
-func AuthLogin(ctx *fiber.Ctx) error {
+func AuthLogin(c *fiber.Ctx) error {
 	var body requests.Login
 
-	err := ctx.BodyParser(&body)
+	err := c.BodyParser(&body)
 	if err != nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"status": false,
 			"message": "Failed to POST data",
 			"errors": []string {"No Telp atau kata sandi salah"},
@@ -35,7 +35,7 @@ func AuthLogin(ctx *fiber.Ctx) error {
 
 		s, err := token.SignedString([]byte(jwtSecret))
 		if err != nil {
-			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"status": false,
 				"message": "Failed to POST data",
 				"errors": []string {"No Telp atau kata sandi salah"},
@@ -44,11 +44,27 @@ func AuthLogin(ctx *fiber.Ctx) error {
 		}
 
 		// Get Province and City Detail
-		var province models.Province = helpers.GetProvinceDetail(user.IDProvinsi)
-		var city models.City = helpers.GetCityDetail(user.IDKota)
+		province, err := helpers.GetProvinceDetail(user.IDProvinsi)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status": false,
+				"message": "Failed to POST data",
+				"errors": []string {"No Telp atau kata sandi salah"},
+				"data": nil,
+			})
+		}
+		city, err := helpers.GetCityDetail(user.IDKota)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status": false,
+				"message": "Failed to POST data",
+				"errors": []string {"No Telp atau kata sandi salah"},
+				"data": nil,
+			})
+		}
 
 		// Response
-		return ctx.JSON(fiber.Map{
+		return c.JSON(fiber.Map{
 			"status": true,
 			"message": "Succeed to POST data",
 			"errors": nil,
@@ -74,10 +90,85 @@ func AuthLogin(ctx *fiber.Ctx) error {
 	}
 
 	// Wrong Credentials
-	return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 		"status": false,
 		"message": "Failed to POST data",
 		"errors": []string {"No Telp atau kata sandi salah"},
 		"data": nil,
+	})
+}
+
+func AuthRegister(c *fiber.Ctx) error {
+	var body requests.Register
+
+	err := c.BodyParser(&body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": []string {err.Error()},
+			"data": nil,
+		})
+	}
+
+
+	// Inserting to user table
+	formattedTanggalLahir, err := helpers.TimeParserToDate(body.TanggalLahir)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": []string {err.Error()},
+			"data": nil,
+		})
+	}
+	newUser := models.User{
+		Nama: body.Nama,
+		KataSandi: body.KataSandi,
+		NoTelp: body.NoTelp,
+		TanggalLahir: formattedTanggalLahir,
+		Pekerjaan: body.Pekerjaan,
+		Email: body.Email,
+		IDProvinsi: body.IDProvinsi,
+		IDKota: body.IDKota,
+		IsAdmin: false,
+	}
+	if err := database.DB.Create(&newUser).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": []string {err.Error()},
+			"data": nil,
+		})
+	}
+
+	var createdUser models.User
+	if err := database.DB.Where("notelp = ? AND kata_sandi = ?", body.NoTelp, body.KataSandi).First(&createdUser).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": []string {err.Error()},
+			"data": nil,
+		})
+	}
+
+	newToko := models.Toko{
+		IDUser: createdUser.ID,
+		NamaToko: "Toko " + body.Nama,
+	}
+	if err := database.DB.Create(&newToko).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": []string {err.Error()},
+			"data": nil,
+		})
+	}
+	
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to POST data",
+		"errors": nil,
+		"data": "Register Succeed",
 	})
 }
