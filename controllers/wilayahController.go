@@ -164,7 +164,7 @@ func WilayahGetCityDetail(c *fiber.Ctx) error {
 	defer resp.Body.Close()
 
 	// Parse the response body to JSON
-	var city models.Province
+	var city models.City
 	err = json.NewDecoder(resp.Body).Decode(&city)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

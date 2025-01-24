@@ -11,4 +11,7 @@ func RouterApp(c *fiber.App) {
 	c.Get("/provcity/listcities/:prov_id", controllers.WilayahGetCitiesList)
 	c.Get("/provcity/detailprovince/:prov_id", controllers.WilayahGetProvinceDetail)
 	c.Get("/provcity/detailcity/:city_id", controllers.WilayahGetCityDetail)
+
+	// For Auth
+	c.Post("/auth/login", controllers.AuthLogin)
 }

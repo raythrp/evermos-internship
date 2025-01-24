@@ -6,7 +6,7 @@ type User struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
 	Nama        string    `json:"nama"`
 	KataSandi   string    `json:"kata_sandi"`
-	NoTelp      string    `gorm:"unique" json:"notelp"`
+	NoTelp      string    `gorm:"column:notelp" json:"notelp"`
 	TanggalLahir time.Time `json:"tanggal_lahir"`
 	JenisKelamin string    `json:"jenis_kelamin"`
 	Tentang      string    `json:"tentang"`
