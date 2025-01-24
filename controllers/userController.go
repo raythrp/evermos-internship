@@ -6,7 +6,7 @@ import (
 	"github.com/raythrp/evermos-internship/helpers"
 	models "github.com/raythrp/evermos-internship/models/entities"
 	"github.com/raythrp/evermos-internship/models/requests"
-
+	"github.com/raythrp/evermos-internship/models/responses"
 )
 
 func UserGetMyProfile(c *fiber.Ctx) error {
@@ -89,5 +89,82 @@ func UserUpdateMyProfile(c *fiber.Ctx) error {
 		"message": "Succeed to PUT data",
 		"errors": nil,
 		"data": "",
+	})
+}
+
+func UserGetAlamat(c *fiber.Ctx) error {
+	noTelp := helpers.JwtClaimer(c)
+
+	// Invalid
+	var user models.User
+	var alamat responses.Alamat
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	if err := database.DB.Where("id_user = ?", user.ID).First(&alamat).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	// OK response
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to GET data",
+		"errors": nil,
+		"data": []responses.Alamat {alamat},
+	})
+}
+
+func UserGetAlamatByID(c *fiber.Ctx) error {
+	noTelp := helpers.JwtClaimer(c)
+	
+	// Taking Parameters
+	alamatID := c.Params("id")
+	if alamatID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to get data",
+			"errors": "No Province ID provided",
+			"data": nil,
+		})
+	}
+
+	// Invalid
+	var user models.User
+	var alamat responses.Alamat
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	if err := database.DB.Where("id_user = ? AND id = ?", user.ID, alamatID).First(&alamat).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	// OK response
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to GET data",
+		"errors": nil,
+		"data": []responses.Alamat {alamat},
 	})
 }

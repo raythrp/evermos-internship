@@ -20,4 +20,6 @@ func RouterApp(c *fiber.App) {
 	// For User
 	c.Get("/user", middlewares.AuthRequired(), controllers.UserGetMyProfile)
 	c.Put("/user", middlewares.AuthRequired(), controllers.UserUpdateMyProfile)
+	c.Get("/user/alamat", middlewares.AuthRequired(), controllers.UserGetAlamat)
+	c.Get("/user/alamat/:id", middlewares.AuthRequired(), controllers.UserGetAlamatByID)
 }
