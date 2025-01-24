@@ -46,12 +46,12 @@ func UserUpdateMyProfile(c *fiber.Ctx) error {
 
 	var existingUser models.User
 	if err := database.DB.Where("notelp = ?", noTelp).First(&existingUser).Error; err != nil {
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"status":  false,
-		"message": "User not found",
-		"errors":  err.Error(),
-		"data":    nil,
-	})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  false,
+			"message": "User not found",
+			"errors":  err.Error(),
+			"data":    nil,
+		})
 	}
 
 	// Inserting to user table
@@ -97,7 +97,7 @@ func UserGetAlamat(c *fiber.Ctx) error {
 
 	// Invalid
 	var user models.User
-	var alamat responses.Alamat
+	var alamat []responses.Alamat
 	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status": false,
@@ -107,7 +107,7 @@ func UserGetAlamat(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := database.DB.Where("id_user = ?", user.ID).First(&alamat).Error; err != nil {
+	if err := database.DB.Where("id_user = ?", user.ID).Find(&alamat).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status": false,
 			"message": "Failed to GET data",
@@ -121,7 +121,7 @@ func UserGetAlamat(c *fiber.Ctx) error {
 		"status": true,
 		"message": "Succeed to GET data",
 		"errors": nil,
-		"data": []responses.Alamat {alamat},
+		"data": alamat,
 	})
 }
 
@@ -166,5 +166,57 @@ func UserGetAlamatByID(c *fiber.Ctx) error {
 		"message": "Succeed to GET data",
 		"errors": nil,
 		"data": []responses.Alamat {alamat},
+	})
+}
+
+func UserCreateAlamat(c *fiber.Ctx) error {
+	// Taking Body
+	var body requests.PostAlamat
+	noTelp := helpers.JwtClaimer(c)
+
+	err := c.BodyParser(&body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to Failed data",
+			"errors": []string {err.Error()},
+			"data": nil,
+		})
+	}
+
+	// Getting User Details
+	var user models.User
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  false,
+			"message": "User not found",
+			"errors":  err.Error(),
+			"data":    nil,
+		})
+	}
+
+	// Creating new Alamat
+	newAlamat := models.Alamat{
+		IDUser: user.ID,
+		JudulAlamat: body.JudulAlamat,
+		NamaPenerima: body.NamaPenerima,
+		NoTelp:  body.NoTelp,
+		DetailAlamat: body.DetailAlamat,
+	}
+	if err := database.DB.Create(&newAlamat).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": []string {err.Error()},
+			"data": nil,
+		})
+	}
+
+	// OK response
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to POST data",
+		"errors": nil,
+		"data": 1,
 	})
 }

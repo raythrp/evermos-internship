@@ -11,3 +11,10 @@ type UpdateUser struct {
 	IDProvinsi   string    `json:"id_provinsi"`
 	IDKota       string    `json:"id_kota"`
 }
+
+type PostAlamat struct {
+	JudulAlamat  string    `json:"judul_alamat"`
+	NamaPenerima string    `json:"nama_penerima"`
+	NoTelp       string    `json:"no_telp"`
+	DetailAlamat string    `json:"detail_alamat"`
+}

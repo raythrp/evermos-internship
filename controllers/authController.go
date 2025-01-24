@@ -101,6 +101,7 @@ func AuthLogin(c *fiber.Ctx) error {
 }
 
 func AuthRegister(c *fiber.Ctx) error {
+	// Taking body
 	var body requests.Register
 
 	err := c.BodyParser(&body)
