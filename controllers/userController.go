@@ -171,7 +171,7 @@ func UserGetAlamatByID(c *fiber.Ctx) error {
 
 func UserCreateAlamat(c *fiber.Ctx) error {
 	// Taking Body
-	var body requests.PostAlamat
+	var body requests.CreateAlamat
 	noTelp := helpers.JwtClaimer(c)
 
 	err := c.BodyParser(&body)
@@ -218,5 +218,73 @@ func UserCreateAlamat(c *fiber.Ctx) error {
 		"message": "Succeed to POST data",
 		"errors": nil,
 		"data": 1,
+	})
+}
+
+func UserUpdateAlamatByID(c *fiber.Ctx) error {
+	// Taking Parameters
+	alamatID := c.Params("id")
+	if alamatID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to get data",
+			"errors": "No Province ID provided",
+			"data": nil,
+		})
+	}
+
+	// Taking body
+	var body requests.UpdateAlamat
+	noTelp := helpers.JwtClaimer(c)
+
+	err := c.BodyParser(&body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": []string {"record not found"},
+			"data": nil,
+		})	
+	}
+
+	// Getting User Details
+	var user models.User
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": []string {"record not found"},
+			"data": nil,
+		})	
+	}
+
+	var existingAlamat models.Alamat
+	if err := database.DB.Where("id_user = ? and id = ?", user.ID, alamatID).First(&existingAlamat).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": []string {"record not found"},
+			"data": nil,
+		})	
+	}
+
+	// Updating table
+	existingAlamat.NamaPenerima = body.NamaPenerima
+	existingAlamat.NoTelp = body.NoTelp
+	existingAlamat.DetailAlamat = body.DetailAlamat
+	if err := database.DB.Save(&existingAlamat).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": []string {"record not found"},
+			"data": nil,
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to GET data",
+		"errors": nil,
+		"data": "",
 	})
 }

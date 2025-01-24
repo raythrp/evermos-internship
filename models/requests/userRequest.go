@@ -12,8 +12,14 @@ type UpdateUser struct {
 	IDKota       string    `json:"id_kota"`
 }
 
-type PostAlamat struct {
+type CreateAlamat struct {
 	JudulAlamat  string    `json:"judul_alamat"`
+	NamaPenerima string    `json:"nama_penerima"`
+	NoTelp       string    `json:"no_telp"`
+	DetailAlamat string    `json:"detail_alamat"`
+}
+
+type UpdateAlamat struct {
 	NamaPenerima string    `json:"nama_penerima"`
 	NoTelp       string    `json:"no_telp"`
 	DetailAlamat string    `json:"detail_alamat"`
