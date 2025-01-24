@@ -81,5 +81,3 @@ func AuthLogin(ctx *fiber.Ctx) error {
 		"data": nil,
 	})
 }
-
-func
