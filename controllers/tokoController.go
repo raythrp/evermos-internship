@@ -57,7 +57,12 @@ func TokoGetTokoByID(c *fiber.Ctx) error {
 	}
 
 	// Non-admin Token
-	helpers.AdminValidator(c, user)
+	if !user.IsAdmin {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status": false,
+			"message": "Unauthorized",
+		})
+	}
 
 	// Taking Parameters
 	tokoID := c.Params("id_toko")
@@ -105,7 +110,12 @@ func TokoGetAllToko(c *fiber.Ctx) error {
 	}
 
 	// Non-admin Token
-	helpers.AdminValidator(c, user)
+	if !user.IsAdmin {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status": false,
+			"message": "Unauthorized",
+		})
+	}
 
 	// Pagination Implementation
 	page := c.QueryInt("page", 1)
@@ -175,7 +185,12 @@ func TokoUpdateProfile(c *fiber.Ctx) error {
 	}
 
 	// Non-admin Token
-	helpers.AdminValidator(c, user)
+	if !user.IsAdmin {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status": false,
+			"message": "Unauthorized",
+		})
+	}
 
 	// Taking Parameters
 	tokoID := c.Params("id_toko")

@@ -31,4 +31,10 @@ func RouterApp(c *fiber.App) {
 	c.Get("/toko/:id_toko", middlewares.AuthRequired(), controllers.TokoGetTokoByID)
 	c.Get("/toko", middlewares.AuthRequired(), controllers.TokoGetAllToko)
 	c.Put("/toko/:id_toko", middlewares.AuthRequired(), controllers.TokoUpdateProfile)
+
+	// For Category
+	c.Get("/category", middlewares.AuthRequired(), controllers.CategoryGetAll)
+	c.Get("/category/:id_category", middlewares.AuthRequired(), controllers.CategoryGetByID)
+	c.Post("/category", middlewares.AuthRequired(), controllers.CategoryCreate)
+	c.Delete("/category/:id", middlewares.AuthRequired(), controllers.CategoryDelete)
 }
