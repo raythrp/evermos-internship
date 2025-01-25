@@ -25,4 +25,9 @@ func RouterApp(c *fiber.App) {
 	c.Post("/user/alamat", middlewares.AuthRequired(), controllers.UserCreateAlamat)
 	c.Put("/user/alamat/:id", middlewares.AuthRequired(), controllers.UserUpdateAlamatByID)
 	c.Delete("/user/alamat/:id", middlewares.AuthRequired(), controllers.UserDeleteAlamatByID)
+
+	// For Toko
+	c.Get("/toko/my", middlewares.AuthRequired(), controllers.TokoGetMyToko)
+	c.Get("/toko/:id_toko", middlewares.AuthRequired(), controllers.TokoGetTokoByID)
+	c.Get("/toko", middlewares.AuthRequired(), controllers.TokoGetAllToko)
 }
