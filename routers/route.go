@@ -24,4 +24,5 @@ func RouterApp(c *fiber.App) {
 	c.Get("/user/alamat/:id", middlewares.AuthRequired(), controllers.UserGetAlamatByID)
 	c.Post("/user/alamat", middlewares.AuthRequired(), controllers.UserCreateAlamat)
 	c.Put("/user/alamat/:id", middlewares.AuthRequired(), controllers.UserUpdateAlamatByID)
+	c.Delete("/user/alamat/:id", middlewares.AuthRequired(), controllers.UserDeleteAlamatByID)
 }

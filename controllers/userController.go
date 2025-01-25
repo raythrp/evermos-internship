@@ -288,3 +288,46 @@ func UserUpdateAlamatByID(c *fiber.Ctx) error {
 		"data": "",
 	})
 }
+
+func UserDeleteAlamatByID(c *fiber.Ctx) error {
+	// Taking Parameters
+	alamatID := c.Params("id")
+	if alamatID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to get data",
+			"errors": "No Province ID provided",
+			"data": nil,
+		})
+	}
+	noTelp := helpers.JwtClaimer(c)
+
+	// Getting User Details
+	var user models.User
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": []string {"record not found"},
+			"data": nil,
+		})	
+	}
+
+	// Getting Alamat Details
+	var existingAlamat models.Alamat
+	if err := database.DB.Where("id_user = ? and id = ?", user.ID, alamatID).First(&existingAlamat).Delete(&existingAlamat).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": []string {"record not found"},
+			"data": nil,
+		})	
+	}
+
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to GET data",
+		"errors": nil,
+		"data": "",
+	})
+}
