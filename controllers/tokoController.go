@@ -144,7 +144,6 @@ func TokoGetAllToko(c *fiber.Ctx) error {
 				"data": tokos,
 			},
 		})
-
 	}
 
 	var tokos []responses.Toko

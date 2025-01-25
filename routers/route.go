@@ -37,4 +37,8 @@ func RouterApp(c *fiber.App) {
 	c.Get("/category/:id_category", middlewares.AuthRequired(), controllers.CategoryGetByID)
 	c.Post("/category", middlewares.AuthRequired(), controllers.CategoryCreate)
 	c.Delete("/category/:id", middlewares.AuthRequired(), controllers.CategoryDelete)
+
+	// For Produk
+	c.Get("/product", middlewares.AuthRequired(), controllers.ProdukGetAll)
+	c.Get("/product/:id", middlewares.AuthRequired(), controllers.ProdukGetByID)
 }
