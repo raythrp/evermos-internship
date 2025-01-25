@@ -1,6 +1,10 @@
 package controllers
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/raythrp/evermos-internship/database"
 	"github.com/raythrp/evermos-internship/helpers"
@@ -74,7 +78,6 @@ func ProdukGetByID(c *fiber.Ctx) error {
 		})
 	}
 
-
 	var toko responses.Toko
 	if err := database.DB.Where("id_user = ?", user.ID).First(&toko).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -107,5 +110,138 @@ func ProdukGetByID(c *fiber.Ctx) error {
 		"data": fiber.Map{
 			"data": product,
 		},
+	})
+}
+
+func ProdukCreate(c *fiber.Ctx) error {
+	noTelp := helpers.JwtClaimer(c)
+
+	// User valid
+	var user models.User
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": []string {"No Data Product"},
+			"data": nil,
+		})
+	}
+
+	// Toko valid
+	var toko models.Toko
+	if err := database.DB.Where("id_user = ?", user.ID).First(&toko).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": []string {"No Data Product"},
+			"data": nil,
+		})
+	}
+
+	// Taking Form Values
+	namaProduk := c.FormValue("nama_produk")
+	categoryID := c.FormValue("category_id")
+	hargaReseller := c.FormValue("harga_reseller")
+	hargaKonsumen := c.FormValue("harga_konsumen")
+	stok := c.FormValue("stok")
+	deskripsi := c.FormValue("deskripsi")
+
+	categoryIDNum, err := strconv.ParseUint(categoryID, 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	stokNum, err := strconv.Atoi(stok)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	newProduct := models.Produk{
+		NamaProduk: namaProduk,
+		IDCategory: uint(categoryIDNum),
+		HargaReseller: hargaReseller,
+		HargaKonsumen: hargaKonsumen,
+		Stok: stokNum,
+		Deskripsi: deskripsi,
+		IDToko: toko.ID,
+	}
+
+	if err := database.DB.Create(&newProduct).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	// Getting Created Produk ID
+	var existingProduct models.Produk
+	if err := database.DB.Where("nama_produk = ? AND deskripsi = ?", newProduct.NamaProduk, newProduct.Deskripsi).First(&existingProduct).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": nil,
+			"data": nil,
+		})
+	}
+
+	// Handle file upload
+	form, err := c.MultipartForm()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+	files := form.File["photos"]
+
+	// Save the file to the server
+	for _, file := range files {
+		// Generate unique filename
+		filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
+		savePath := fmt.Sprintf("./uploads/%s", filename)
+		if err := c.SaveFile(file, savePath); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status": false,
+				"message": "Failed to POST data",
+				"errors": nil,
+				"data": nil,
+			})
+		}
+
+		// Create new FotoProduk
+		newFotoProduk := models.FotoProduk{
+			IDProduk: existingProduct.ID,
+			Url: savePath,
+		}
+		if err := database.DB.Create(&newFotoProduk).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status": false,
+				"message": "Failed to POST Product Photo",
+				"errors": nil,
+				"data": nil,
+			})
+		}
+	}
+
+	// OK Response
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to POST data",
+		"errors": nil,
+		"data": 4,
 	})
 }

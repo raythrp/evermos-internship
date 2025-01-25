@@ -1,6 +1,8 @@
 package helpers
 
-import "time"
+import (
+	"time"
+)
 
 func TimeParserToDate(inputDate string) (time.Time, error) {
 	// Parse the date string to a time.Time object
