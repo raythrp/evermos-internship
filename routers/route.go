@@ -30,4 +30,5 @@ func RouterApp(c *fiber.App) {
 	c.Get("/toko/my", middlewares.AuthRequired(), controllers.TokoGetMyToko)
 	c.Get("/toko/:id_toko", middlewares.AuthRequired(), controllers.TokoGetTokoByID)
 	c.Get("/toko", middlewares.AuthRequired(), controllers.TokoGetAllToko)
+	c.Put("/toko/:id_toko", middlewares.AuthRequired(), controllers.TokoUpdateProfile)
 }

@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/raythrp/evermos-internship/database"
 	"github.com/raythrp/evermos-internship/helpers"
@@ -22,7 +25,7 @@ func TokoGetMyToko(c *fiber.Ctx) error {
 		})
 	}
 
-	var toko responses.Toko
+	var toko responses.MyToko
 	if err := database.DB.Where("id_user = ?", user.ID).First(&toko).Error; err == nil {
 		return c.JSON(fiber.Map{
 			"status": true,
@@ -93,7 +96,7 @@ func TokoGetAllToko(c *fiber.Ctx) error {
 	// User valid
 	var user models.User
 	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"status": false,
 			"message": "Failed to GET data",
 			"errors": []string {"Toko tidak ditemukan"},
@@ -154,5 +157,93 @@ func TokoGetAllToko(c *fiber.Ctx) error {
 			"limit": limit,
 			"data": tokos,
 		},
+	})
+}
+
+func TokoUpdateProfile(c *fiber.Ctx) error {
+	noTelp := helpers.JwtClaimer(c)
+
+	// User valid
+	var user models.User
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to UPDATE data",
+			"errors": nil,
+			"data": nil,
+		})
+	}
+
+	// Non-admin Token
+	helpers.AdminValidator(c, user)
+
+	// Taking Parameters
+	tokoID := c.Params("id_toko")
+	if tokoID == "" {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to UPDATE data",
+			"errors": nil,
+			"data": nil,
+		})
+	}
+
+	// Parse form data
+	namaToko := c.FormValue("nama_toko")
+
+	// Handle file upload
+	file, err := c.FormFile("photo")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to UPDATE data",
+			"errors": nil,
+			"data": nil,
+		})
+	}
+
+	// Generate unique filename
+	filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
+
+	// Save the file to the server
+	savePath := fmt.Sprintf("./uploads/%s", filename)
+	if err := c.SaveFile(file, savePath); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to UPDATE data",
+			"errors": nil,
+			"data": nil,
+		})
+	}
+
+	// Finding Toko
+	var toko models.Toko
+	if err := database.DB.Where("id = ?", tokoID).First(&toko).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to UPDATE data",
+			"errors": nil,
+			"data": nil,
+		})
+	}
+
+	// Updating Table
+	toko.NamaToko = namaToko
+    	toko.UrlFoto = savePath
+	if err := database.DB.Save(&toko).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to UPDATE data",
+			"errors": nil,
+			"data": nil,
+		})
+	}
+
+	// OK Response
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to UPDATE data",
+		"errors": nil,
+		"data": "Update toko succeed",
 	})
 }
