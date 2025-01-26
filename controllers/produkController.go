@@ -387,3 +387,60 @@ func ProdukUpdate(c *fiber.Ctx) error {
 		"data": "",
 	})
 }
+
+func ProdukDelete(c *fiber.Ctx) error {
+	noTelp := helpers.JwtClaimer(c)
+
+	// User valid
+	var user models.User
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to DELETE data",
+			"errors": []string {"record not found", err.Error()},
+			"data": nil,
+		})
+	}
+
+	// Toko valid
+	var toko models.Toko
+	if err := database.DB.Where("id_user = ?", user.ID).First(&toko).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to DELETE data",
+			"errors": []string {"record not found", err.Error()},
+			"data": nil,
+		})
+	}
+	productID := c.Params("id")
+
+	// Deleting FotoProduk
+	var existingProductPhotos []models.FotoProduk
+	if err := database.DB.Where("id_produk = ?", productID).Find(&existingProductPhotos).Delete(&existingProductPhotos).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": true,
+			"message": "Failed to DELETE data",
+			"errors": []string {"record not found", err.Error()},
+			"data": nil,
+		})
+	}
+
+	// Deleting Produk
+	var existingProduct models.Produk
+	if err := database.DB.Where("id = ? AND id_toko = ?", productID, toko.ID).First(&existingProduct).Delete(&existingProduct).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": true,
+			"message": "Failed to DELETE data",
+			"errors": []string {"record not found", err.Error()},
+			"data": nil,
+		})
+	}
+
+	// OK Response
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to DELETE data",
+		"errors": nil,
+		"data": nil,
+	})
+}
