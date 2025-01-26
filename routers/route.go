@@ -42,4 +42,5 @@ func RouterApp(c *fiber.App) {
 	c.Get("/product", middlewares.AuthRequired(), controllers.ProdukGetAll)
 	c.Get("/product/:id", middlewares.AuthRequired(), controllers.ProdukGetByID)
 	c.Post("/product", middlewares.AuthRequired(), controllers.ProdukCreate)
+	c.Put("/product/:id", middlewares.AuthRequired(), controllers.ProdukUpdate)
 }

@@ -168,6 +168,7 @@ func ProdukCreate(c *fiber.Ctx) error {
 
 	newProduct := models.Produk{
 		NamaProduk: namaProduk,
+		Slug: helpers.ConvertToSlug(namaProduk),
 		IDCategory: uint(categoryIDNum),
 		HargaReseller: hargaReseller,
 		HargaKonsumen: hargaKonsumen,
@@ -243,5 +244,146 @@ func ProdukCreate(c *fiber.Ctx) error {
 		"message": "Succeed to POST data",
 		"errors": nil,
 		"data": 4,
+	})
+}
+
+func ProdukUpdate(c *fiber.Ctx) error {
+	noTelp := helpers.JwtClaimer(c)
+
+	// User valid
+	var user models.User
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	// Toko valid
+	var toko models.Toko
+	if err := database.DB.Where("id_user = ?", user.ID).First(&toko).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	productID := c.Params("id")
+	var product models.Produk
+	if err := database.DB.Where("id = ? AND id_toko = ?", productID, toko.ID).First(&product).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to PUT data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	// Taking Form Values and Binding filled Keys
+	namaProduk := c.FormValue("nama_produk", "")
+	if namaProduk != "" {
+		product.NamaProduk = namaProduk
+		product.Slug = helpers.ConvertToSlug(namaProduk)
+	}
+	categoryID := c.FormValue("category_id", "")
+	if categoryID != "" {
+		categoryIDNum, err := strconv.ParseUint(categoryID, 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status": false,
+				"message": "Failed to POST data",
+				"errors": err.Error(),
+				"data": nil,
+			})
+		}
+		product.IDCategory = uint(categoryIDNum)
+	}
+	hargaReseller := c.FormValue("harga_reseller", "")
+	if hargaReseller != "" {
+		product.HargaReseller = hargaReseller
+	}
+	hargaKonsumen := c.FormValue("harga_konsumen", "")
+	if hargaKonsumen != "" {
+		product.HargaKonsumen = hargaKonsumen
+	}
+	stok := c.FormValue("stok", "")
+	if stok != "" {
+		stokNum, err := strconv.Atoi(stok)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status": false,
+				"message": "Failed to POST data",
+				"errors": err.Error(),
+				"data": nil,
+			})
+		}
+		product.Stok = stokNum
+	}
+	deskripsi := c.FormValue("deskripsi", "")
+	if deskripsi != "" {
+		product.Deskripsi = deskripsi
+	}
+
+	// Saving to Table
+	if err := database.DB.Save(&product).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	// Handle file upload
+	form, err := c.MultipartForm()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+	files := form.File["photos"]
+
+	// Save the file to the server
+	for _, file := range files {
+		// Generate unique filename
+		filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
+		savePath := fmt.Sprintf("./uploads/%s", filename)
+		if err := c.SaveFile(file, savePath); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status": false,
+				"message": "Failed to POST data",
+				"errors": nil,
+				"data": nil,
+			})
+		}
+
+		// Create new FotoProduk
+		newFotoProduk := models.FotoProduk{
+			IDProduk: product.ID,
+			Url: savePath,
+		}
+		if err := database.DB.Create(&newFotoProduk).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status": false,
+				"message": "Failed to POST Product Photo",
+				"errors": nil,
+				"data": nil,
+			})
+		}
+	}
+
+	// OK Response
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to POST data",
+		"errors": nil,
+		"data": "",
 	})
 }

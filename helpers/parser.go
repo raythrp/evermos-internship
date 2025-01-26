@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"strings"
 	"time"
 )
 
@@ -16,4 +17,10 @@ func TimeParserToDate(inputDate string) (time.Time, error) {
 	adjustedDate := parsedDate.In(location)
 
 	return adjustedDate, nil
+}
+
+func ConvertToSlug(inputString string) string {
+	lowercase := strings.ToLower(inputString)
+	slug := strings.ReplaceAll(lowercase, " ", "-")
+	return slug
 }
