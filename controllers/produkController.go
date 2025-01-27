@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/raythrp/evermos-internship/database"
 	"github.com/raythrp/evermos-internship/helpers"
