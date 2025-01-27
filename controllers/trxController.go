@@ -69,13 +69,14 @@ func TrxGetAll(c *fiber.Ctx) error {
 
       // Binding LogProduk to DetailTrx
       for i := range transaction_details {
-            for j := range product_logs {
-                  if transaction_details[i].IDLogProduk == product_logs[j].ID {
-                        transaction_details[i].LogProduk = product_logs[j]
-                        // product_logs = append(product_logs[:j], product_logs[j + 1:]...) // Removes taken LogProduk
-                  }
+            for j := 0; j < len(product_logs); j++ {
+                if transaction_details[i].IDLogProduk == product_logs[j].ID {
+                    transaction_details[i].LogProduk = product_logs[j]
+                    product_logs = append(product_logs[:j], product_logs[j+1:]...) // Removes taken LogProduk
+                    j--
+                }
             }
-      }
+        }
 
       // Get Trx
 	var transactions []responses.Trx
@@ -88,18 +89,19 @@ func TrxGetAll(c *fiber.Ctx) error {
 		})
 	}
 
-      // Bind DetailTrx to Trx
+      // Binding DetailTrx to Trx
       for i := range transactions {
-            for j := range transaction_details {
-                  if transactions[i].ID == transaction_details[j].IDTrx {
-                        transactions[i].DetailTrx = append(transactions[i].DetailTrx, transaction_details[j])
-                        // transaction_details = append(transaction_details[:j], transaction_details[j + 1:]...) // Removes taken DetailTrx
-                  }
+            for j := 0; j < len(transaction_details); j++ {
+                if transactions[i].ID == transaction_details[j].IDTrx {
+                    transactions[i].DetailTrx = append(transactions[i].DetailTrx, transaction_details[j])
+                    transaction_details = append(transaction_details[:j], transaction_details[j+1:]...) // Remove taken DetailTrx
+                    j--
+                }
             }
-      }
+        }
 
       // Apply in-memory pagination
-	page, _ := strconv.Atoi(c.Query("page", "1"))       // Default page is 1
+	page, _ := strconv.Atoi(c.Query("page", "1"))      // Default page is 1
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))   // Default limit is 10
 	start := (page - 1) * limit                        // Start index
 	end := start + limit                               // End index
