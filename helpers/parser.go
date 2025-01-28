@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"strconv"
 	"strings"
 	"time"
 )
@@ -23,4 +24,16 @@ func ConvertToSlug(inputString string) string {
 	lowercase := strings.ToLower(inputString)
 	slug := strings.ReplaceAll(lowercase, " ", "-")
 	return slug
+}
+
+func IDGenerator() uint {
+	nano := uint(time.Now().UnixNano())
+	reduced := nano % 100000000
+	return reduced
+}
+
+func InvoiceCodeGenerator() string {
+	nano := time.Now().UnixNano()
+	reduced := nano % 100000000
+	return "INV-" + strconv.Itoa(int(reduced))
 }

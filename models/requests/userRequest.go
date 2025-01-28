@@ -4,7 +4,7 @@ type UpdateUser struct {
 	Nama        string    `json:"nama"`
 	KataSandi   string    `json:"kata_sandi"`
 	NoTelp      string    `json:"no_telp"`
-	TanggalLahir string `json:"tanggal_lahir"`
+	TanggalLahir string   `json:"tanggal_lahir"`
 	Tentang      string    `json:"tentang"`
 	Pekerjaan    string    `json:"pekerjaan"`
 	Email        string    `json:"email"`

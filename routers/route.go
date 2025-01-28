@@ -48,4 +48,5 @@ func RouterApp(c *fiber.App) {
 	// For Transactions
 	c.Get("/trx", middlewares.AuthRequired(), controllers.TrxGetAll)
 	c.Get("/trx/:id", middlewares.AuthRequired(), controllers.TrxGetByID)
+	c.Post("/trx", middlewares.AuthRequired(), controllers.TrxCreate)
 }

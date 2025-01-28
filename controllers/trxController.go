@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"strconv"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/raythrp/evermos-internship/database"
 	"github.com/raythrp/evermos-internship/helpers"
 	models "github.com/raythrp/evermos-internship/models/entities"
+	"github.com/raythrp/evermos-internship/models/requests"
 	"github.com/raythrp/evermos-internship/models/responses"
 )
 
@@ -224,4 +224,190 @@ func TrxGetByID(c *fiber.Ctx) error {
 		"errors": nil,
 		"data": transaction,
 	})
+}
+
+func TrxCreate(c *fiber.Ctx) error {
+      noTelp := helpers.JwtClaimer(c)
+      var body requests.CreateTrx
+
+	// User valid
+	var user models.User
+	if err := database.DB.Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+      // Toko valid
+      var toko models.Toko
+      if err := database.DB.Where("id_user = ?", user.ID).First(&toko).Error; err != nil {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+      }
+
+      err := c.BodyParser(&body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+      // Alamat Valid
+      var alamat models.Alamat
+      if err := database.DB.Where("id = ?", body.AlamatKirim).First(&alamat).Error; err != nil {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+      }
+      if alamat.IDUser != user.ID {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to POST data",
+			"errors": "No Selected Alamat Record Found",
+			"data": nil,
+		})
+      }
+
+
+      // Generate Trx ID
+      var newTransactionID = helpers.IDGenerator()
+      totalPrice := 0
+
+      // Create New Trx
+      newTransaction := models.Trx{
+            ID: newTransactionID,
+            IDUser: user.ID,
+            AlamatPengiriman: body.AlamatKirim,
+            HargaTotal: totalPrice,
+            MethodBayar: body.MetodeBayar,
+            KodeInvoice: helpers.InvoiceCodeGenerator(),
+      }
+      if err := database.DB.Create(&newTransaction).Error; err != nil {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                  "status": false,
+                  "message": "Failed to POST data",
+                  "errors": []string {err.Error()},
+                  "data": nil,
+            })
+      }
+
+      // Produk and DetailTrx Processing
+      for i := range len(body.DetailTrx) {
+            // Get Produk
+            var produk models.Produk
+            if err := database.DB.Where("id = ? AND id_toko = ?", body.DetailTrx[i].ProdukID, toko.ID).First(&produk).Error; err != nil {
+                  return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                        "status": false,
+                        "message": "Failed to POST data",
+                        "errors": err.Error(),
+                        "data": nil,
+                  })
+            }
+
+            // Check Produk Stock Availibility
+            if produk.Stok < body.DetailTrx[i].Kuantitas {
+                  return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+                        "status": false,
+                        "message": "Failed to POST data",
+                        "errors": []string {"Stok Tidak Cukup"},
+                        "data": nil,
+                  })
+            }
+            
+            // Produk Stock Reduction
+            produk.Stok -= body.DetailTrx[i].Kuantitas
+            
+            // Bind Produk to LogProduk
+            newLogProduk := models.LogProduk{
+                  ID: helpers.IDGenerator(),
+                  IDProduk: produk.ID,            
+                  NamaProduk: produk.NamaProduk,       
+                  Slug: produk.Slug,              
+                  HargaReseller: produk.HargaReseller,     
+                  HargaKonsumen: produk.HargaKonsumen,     
+                  Deskripsi: produk.Deskripsi,             
+                  IDToko: produk.IDToko,              
+                  IDCategory: produk.IDCategory,          
+            }
+
+            // Create LogProduk
+            if err := database.DB.Create(&newLogProduk).Error; err != nil {
+                  return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "status": false,
+                        "message": "Failed to POST data",
+                        "errors": []string {err.Error()},
+                        "data": nil,
+                  })
+            }
+
+            // Create DetailTrx
+            numHargaProduk, err := strconv.Atoi(produk.HargaKonsumen)
+            if err != nil {
+                  return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "status": false,
+                        "message": "Failed to POST data",
+                        "errors": []string {err.Error()},
+                        "data": nil,
+                  })
+            }
+            totalProductPrice := int(body.DetailTrx[i].Kuantitas * numHargaProduk)
+            totalPrice += totalProductPrice
+            newTransactionDetail := models.DetailTrx{
+                  IDTrx: newTransactionID,
+                  IDLogProduk: newLogProduk.ID,
+                  IDToko: toko.ID,
+                  Kuantitas: body.DetailTrx[i].Kuantitas,
+                  HargaTotal: totalProductPrice,
+            }
+            if err := database.DB.Create(&newTransactionDetail).Error; err != nil {
+                  return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "status": false,
+                        "message": "Failed to POST data",
+                        "errors": []string {err.Error()},
+                        "data": nil,
+                  })
+            }
+
+            // Produk Stock Reduction
+            if err := database.DB.Save(&produk).Error; err != nil {
+                  return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                        "status": false,
+                        "message": "Failed to POST data",
+                        "errors": []string {err.Error()},
+                        "data": nil,
+                  })
+            }
+      }
+
+      // Update Total Price at Trx
+      newTransaction.HargaTotal = totalPrice
+      if err := database.DB.Save(&newTransaction).Error; err != nil {
+            return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                  "status": false,
+                  "message": "Failed to POST data",
+                  "errors": []string {err.Error()},
+                  "data": nil,
+            })
+      }
+
+      // OK Response
+      return c.JSON(fiber.Map{
+            "status": true,
+            "message": "Succeed to POST data",
+            "errors": nil,
+            "data": 6,
+      })
 }
