@@ -1,11 +1,16 @@
 package middlewares
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v3"
+	"github.com/joho/godotenv"
 )
 
-const jwtSecret = "WsItpI3Moq4I0rVwo2fOcbvw8CDgJT9FMrsz9zsqAy3e7PRU8sojZ79jSDtnOuO0bjceupoidsajp3u2019eu[20ihceoijlciuab]"
+var err = godotenv.Load()
+
+var jwtSecret = os.Getenv("JWT_SECRET")
 
 func AuthRequired() fiber.Handler {
 	return jwtware.New(jwtware.Config{

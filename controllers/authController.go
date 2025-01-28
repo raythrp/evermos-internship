@@ -1,16 +1,21 @@
 package controllers
 
 import (
+	"os"
 	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	"github.com/raythrp/evermos-internship/database"
 	"github.com/raythrp/evermos-internship/helpers"
 	models "github.com/raythrp/evermos-internship/models/entities"
 	"github.com/raythrp/evermos-internship/models/requests"
 )
 
-const jwtSecret = "WsItpI3Moq4I0rVwo2fOcbvw8CDgJT9FMrsz9zsqAy3e7PRU8sojZ79jSDtnOuO0bjceupoidsajp3u2019eu[20ihceoijlciuab]"
+var err = godotenv.Load()
+
+var jwtSecret = os.Getenv("JWT_SECRET")
 
 func AuthLogin(c *fiber.Ctx) error {
 	var body requests.Login

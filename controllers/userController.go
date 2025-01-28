@@ -14,19 +14,35 @@ func UserGetMyProfile(c *fiber.Ctx) error {
 
 	// User valid
 	var user models.User
-	if err := database.DB.Preload("Toko").Where("notelp = ?", noTelp).First(&user).Error; err == nil {
-		return c.JSON(fiber.Map{
-			"status": true,
-			"message": "Succeed to GET data",
-			"errors": nil,
-			"data": user,
+	if err := database.DB.Preload("Trx").Preload("Alamat").Where("notelp = ?", noTelp).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": err.Error(),
+			"data": nil,
 		})
 	}
 
-	// User invalid
-	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		"status": false,
-		"message": "Unauthorized",
+	// Get Toko
+	var toko models.Toko
+	if err := database.DB.Preload("Produk").Preload("LogProduk").Preload("DetailTrx").Where("id_user = ?", user.ID).First(&toko).Error; err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status": false,
+			"message": "Failed to GET data",
+			"errors": err.Error(),
+			"data": nil,
+		})
+	}
+
+	// Bind Toko to User
+	user.Toko = toko
+
+	// OK Response
+	return c.JSON(fiber.Map{
+		"status": true,
+		"message": "Succeed to GET data",
+		"errors": nil,
+		"data": user,
 	})
 }
 

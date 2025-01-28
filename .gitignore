@@ -1,3 +1,4 @@
 /tmp
 uploads/*
 !uploads/script.txt
+.env
