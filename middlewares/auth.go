@@ -5,18 +5,13 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v3"
-	"github.com/joho/godotenv"
 )
-
-var err = godotenv.Load()
-
-var jwtSecret = os.Getenv("JWT_SECRET")
 
 func AuthRequired() fiber.Handler {
 	return jwtware.New(jwtware.Config{
-		SigningKey: []byte(jwtSecret),
+		SigningKey:   []byte(os.Getenv("JWT_SECRET")),
 		ErrorHandler: jwtErrorHandler,
-		TokenLookup: "header:token",
+		TokenLookup:  "header:token",
 	})
 }
 

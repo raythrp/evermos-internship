@@ -7,8 +7,11 @@ import (
 	models "github.com/raythrp/evermos-internship/models/entities"
 )
 
+var WilayahListBaseURL = "https://www.emsifa.com/api-wilayah-indonesia/api"
+var WilayahDetailBaseURL = "https://emsifa.github.io/api-wilayah-indonesia/api"
+
 func WilayahGetProvinciesList(c *fiber.Ctx) error {
-	url := "https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json"
+	url := WilayahListBaseURL + "/provinces.json"
 
 	// Fetch the API
 	resp, err := http.Get(url)
@@ -44,8 +47,6 @@ func WilayahGetProvinciesList(c *fiber.Ctx) error {
 }
 
 func WilayahGetCitiesList(c *fiber.Ctx) error {
-	url := "https://www.emsifa.com/api-wilayah-indonesia/api/regencies/"
-
  	// Taking Parameters
 	id := c.Params("prov_id")
 	if id == "" {
@@ -58,7 +59,7 @@ func WilayahGetCitiesList(c *fiber.Ctx) error {
 	}
 
 	// Fetch the API
-	resp, err := http.Get(url + id + ".json")
+	resp, err := http.Get(WilayahListBaseURL + "/regencies/" + id + ".json")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status": false,
@@ -91,8 +92,6 @@ func WilayahGetCitiesList(c *fiber.Ctx) error {
 }
 
 func WilayahGetProvinceDetail(c *fiber.Ctx) error {
-	url := "https://emsifa.github.io/api-wilayah-indonesia/api/province/"
-
  	// Taking Parameters
 	id := c.Params("prov_id")
 	if id == "" {
@@ -105,7 +104,7 @@ func WilayahGetProvinceDetail(c *fiber.Ctx) error {
 	}
 
 	// Fetch the API
-	resp, err := http.Get(url + id + ".json")
+	resp, err := http.Get(WilayahDetailBaseURL + "/province/" + id + ".json")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status": false,
@@ -138,8 +137,6 @@ func WilayahGetProvinceDetail(c *fiber.Ctx) error {
 }
 
 func WilayahGetCityDetail(c *fiber.Ctx) error {
-	url := "https://emsifa.github.io/api-wilayah-indonesia/api/regency/"
-
  	// Taking Parameters
 	id := c.Params("city_id")
 	if id == "" {
@@ -152,7 +149,7 @@ func WilayahGetCityDetail(c *fiber.Ctx) error {
 	}
 
 	// Fetch the API
-	resp, err := http.Get(url + id + ".json")
+	resp, err := http.Get(WilayahDetailBaseURL + "/regency/" + id + ".json")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status": false,

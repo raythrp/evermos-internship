@@ -1,0 +1,3 @@
+// Package tests contains integration tests that run against a live PostgreSQL database.
+// Run with: go test -tags=integration ./tests/...
+package tests

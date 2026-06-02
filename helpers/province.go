@@ -7,9 +7,11 @@ import (
 	models "github.com/raythrp/evermos-internship/models/entities"
 )
 
+var ProvinceBaseURL = "https://emsifa.github.io/api-wilayah-indonesia/api"
+
 func GetProvinceDetail(id string) (models.Province, error) {
 	var province models.Province
-	url := "https://emsifa.github.io/api-wilayah-indonesia/api/province/" + id + ".json"
+	url := ProvinceBaseURL + "/province/" + id + ".json"
 	provinceResp, err := http.Get(url)
 	if err != nil {
 		return province, err

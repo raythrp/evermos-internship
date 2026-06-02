@@ -6,18 +6,14 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
-	"github.com/joho/godotenv"
 	"github.com/raythrp/evermos-internship/database"
 	"github.com/raythrp/evermos-internship/helpers"
 	models "github.com/raythrp/evermos-internship/models/entities"
 	"github.com/raythrp/evermos-internship/models/requests"
 )
 
-var err = godotenv.Load()
-
-var jwtSecret = os.Getenv("JWT_SECRET")
-
 func AuthLogin(c *fiber.Ctx) error {
+	jwtSecret := os.Getenv("JWT_SECRET")
 	var body requests.Login
 
 	err := c.BodyParser(&body)
