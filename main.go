@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -10,10 +9,8 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// .env is optional — in Docker, vars are injected via the environment
+	_ = godotenv.Load()
 
 	database.ConnectDB()
 	app := fiber.New()

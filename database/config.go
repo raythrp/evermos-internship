@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -12,16 +11,17 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-	errors := godotenv.Load()
-	if errors != nil {
-		log.Fatal("Error loading .env file")
-	}
+	_ = godotenv.Load()
 
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost == "" {
+		dbHost = "127.0.0.1:3306"
+	}
 
 	var err error
-	MYSQL := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/evermos?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPassword)
+	MYSQL := fmt.Sprintf("%s:%s@tcp(%s)/evermos?charset=utf8mb4&parseTime=True&loc=Local", dbUser, dbPassword, dbHost)
 	DSN := MYSQL
 
 	DB, err = gorm.Open(mysql.Open(DSN), &gorm.Config{})
